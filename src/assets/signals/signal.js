@@ -98,10 +98,74 @@ export class Signal {
         let directionType = POSITIVE_DIRECTIONS.includes(direction) ? 1 : -1;
         let directionAxis = X_DIRECTIONS.includes(direction) ? 'x' : 'y';
 
+        this.history.push({...this.position});
+        this.history = this.history.slice(this.history.length - this.ghostSize, this.ghostSize);
         this.position[directionAxis] = this.position[directionAxis] + (increasePos * directionType);
 
         this.lastMovingDirection = direction;
         this.lastDrawTime = progress;
+    }
+
+    drawShadow(progress) {
+        const pathStack = [];
+        let lastStepPosition = null;
+
+        this.history.forEach(pointPosition => {
+            if (!lastStepPosition) {
+                lastStepPosition = pointPosition;
+                pathStack.push({
+                    start: {...pointPosition},
+                    end: null,
+                });
+            } else {
+                // coordinates changed by X and Y
+                const lastPath = pathStack[pathStack.length - 1];
+                if (
+                    (lastPath.start.x !== pointPosition.x) &&
+                    (lastPath.start.y !== pointPosition.y)
+                ) {
+                    lastPath.end = {...lastStepPosition};
+
+                    pathStack.push({
+                        start: {...pointPosition},
+                        end: null,
+                    });
+                }
+
+                lastStepPosition = pointPosition;
+            }
+        });
+
+        if (pathStack.length) {
+            // add the last point (current position)
+            pathStack[pathStack.length - 1].end = {...lastStepPosition};
+
+            pathStack.forEach(path => {
+                this.context.save();
+                this.context.beginPath();
+
+                const gradient = this.context.createLinearGradient(
+                    path.start.x,
+                    path.start.y,
+                    path.end.x,
+                    path.end.y,
+                );
+                // #F5C941
+                gradient.addColorStop(0, `rgba(${this.color.r},${this.color.g},${this.color.b},0)`);
+                gradient.addColorStop(1, `rgba(${this.color.r},${this.color.g},${this.color.b},1)`);
+
+
+                this.context.strokeStyle = gradient;
+                this.context.lineWidth = 3;
+
+                this.context.moveTo(path.start.x, path.start.y);
+                this.context.lineTo(path.end.x, path.end.y);
+                this.context.stroke();
+
+                this.context.closePath();
+                this.context.restore();
+            });
+        }
     }
 
     draw(progress) {
@@ -114,10 +178,13 @@ export class Signal {
         }
 
 
-        this.context.save();
-        this.context.beginPath();
+        this.drawShadow(progress);
 
-        this.context.fillStyle = this.color;
+
+        this.context.save();
+
+        this.context.beginPath();
+        this.context.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},1)`;
         this.context.arc(
             this.position.x,
             this.position.y,
@@ -126,8 +193,8 @@ export class Signal {
             degToRad(360)
         );
         this.context.fill();
-
         this.context.closePath();
+
         this.context.restore();
     }
 }

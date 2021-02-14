@@ -1,5 +1,5 @@
 <template>
-    <canvas-box ref="canvasBox" />
+    <canvas-box ref="canvasBox" :status="canvasBoxStatus" />
 
     <section class="hero is-info is-fullheight">
         <div class="hero-head">
@@ -10,36 +10,40 @@
 
                     <div id="navbarMenuHeroB" class="navbar-menu">
                         <div class="navbar-end">
-<!--                            <a class="navbar-item">-->
-<!--                                Home-->
-<!--                            </a>-->
-<!--                            <a class="navbar-item">-->
-<!--                                Examples-->
-<!--                            </a>-->
-<!--                            <a class="navbar-item">-->
-<!--                                Documentation-->
-<!--                            </a>-->
+                            <a class="navbar-item"
+                               v-if="!canvasPlay"
+                               v-on:click.prevent="canvasPlay = true">
+                                Play
+                            </a>
+                            <a class="navbar-item"
+                               v-if="canvasPlay"
+                               v-on:click.prevent="canvasPlay = false">
+                                Pause
+                            </a>
                         </div>
                     </div>
                 </div>
             </nav>
         </div>
-
-        <!--        <div class="hero-body">-->
-        <!--            <div class="container has-text-centered">-->
-        <!--                content here-->
-        <!--            </div>-->
-        <!--        </div>-->
     </section>
 </template>
 
 <script>
 import CanvasBox from "./components/CanvasBox.vue";
+import {STATUS_PAUSE, STATUS_PLAY} from "./assets/signals/box";
 
 export default {
     name: 'App',
     components: {
         CanvasBox,
+    },
+    data: () => ({
+        canvasPlay: false,
+    }),
+    computed: {
+        canvasBoxStatus() {
+            return this.canvasPlay ? STATUS_PLAY : STATUS_PAUSE;
+        }
     },
     mounted() {
     },

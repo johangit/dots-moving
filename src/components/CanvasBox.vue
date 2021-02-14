@@ -23,13 +23,30 @@
 
 <script>
 import {degToRad} from "../assets/utilities";
-import {Box} from "../assets/signals/box";
+import {Box, STATUS_PAUSE, STATUS_PLAY} from "../assets/signals/box";
 
 export default {
     name: "CanvasBox",
+    props: {
+        status: {
+            type: String,
+            default: STATUS_PAUSE,
+        }
+    },
     data: () => ({
         isReady: false,
     }),
+    watch: {
+        status(newStatus) {
+            if (newStatus === STATUS_PAUSE) {
+                this.signalsBox.pause();
+            }
+
+            if (newStatus === STATUS_PLAY) {
+                this.signalsBox.play();
+            }
+        }
+    },
     methods: {
         init() {
             this.isReady = true;
@@ -39,7 +56,7 @@ export default {
                 const canvasHeight = window.innerHeight;
                 const dpr = window.devicePixelRatio || 1;
 
-                const signalsBox = new Box({
+                this.signalsBox = new Box({
                     node: this.$refs.canvasNode,
                     width: canvasWidth,
                     height: canvasHeight,
@@ -47,7 +64,7 @@ export default {
                     signalsQty: 1
                 });
 
-                signalsBox.render();
+                this.signalsBox.init();
             });
         },
     },
