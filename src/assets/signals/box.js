@@ -53,7 +53,7 @@ export class Box {
                     g: 201,
                     b: 65,
                 },
-                ghostSize: 1000,
+                historyMaxLength: 200,
             }));
 
             i--;

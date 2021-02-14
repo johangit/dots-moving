@@ -1,4 +1,5 @@
 import {degToRad} from "../utilities";
+import {SignalHistory} from "./signal-history";
 
 const DIRECTION_X_RIGHT = 'x';
 const DIRECTION_X_LEFT = '-x';
@@ -37,7 +38,7 @@ const getOppositeDirection = (direction) => {
 
 
 export class Signal {
-    constructor({context, positionX, positionY, speed, size, color, ghostSize}) {
+    constructor({context, positionX, positionY, speed, size, color, historyMaxLength}) {
         this.context = context;
         this.canvasWidth = this.context.canvas.clientWidth;
         this.canvasHeight = this.context.canvas.clientHeight;
@@ -55,9 +56,11 @@ export class Signal {
         this.speed = speed;
         this.size = size;
         this.color = color;
-        this.ghostSize = ghostSize;
 
-        this.history = [];
+        this.history = new SignalHistory({
+            color,
+            maxlength: historyMaxLength,
+        });
     }
 
     updatePosition(progress) {
@@ -95,77 +98,14 @@ export class Signal {
         }
 
 
-        let directionType = POSITIVE_DIRECTIONS.includes(direction) ? 1 : -1;
-        let directionAxis = X_DIRECTIONS.includes(direction) ? 'x' : 'y';
-
         this.history.push({...this.position});
-        this.history = this.history.slice(this.history.length - this.ghostSize, this.ghostSize);
+
+        const directionType = POSITIVE_DIRECTIONS.includes(direction) ? 1 : -1;
+        const directionAxis = X_DIRECTIONS.includes(direction) ? 'x' : 'y';
         this.position[directionAxis] = this.position[directionAxis] + (increasePos * directionType);
 
         this.lastMovingDirection = direction;
         this.lastDrawTime = progress;
-    }
-
-    drawShadow(progress) {
-        const pathStack = [];
-        let lastStepPosition = null;
-
-        this.history.forEach(pointPosition => {
-            if (!lastStepPosition) {
-                lastStepPosition = pointPosition;
-                pathStack.push({
-                    start: {...pointPosition},
-                    end: null,
-                });
-            } else {
-                // coordinates changed by X and Y
-                const lastPath = pathStack[pathStack.length - 1];
-                if (
-                    (lastPath.start.x !== pointPosition.x) &&
-                    (lastPath.start.y !== pointPosition.y)
-                ) {
-                    lastPath.end = {...lastStepPosition};
-
-                    pathStack.push({
-                        start: {...pointPosition},
-                        end: null,
-                    });
-                }
-
-                lastStepPosition = pointPosition;
-            }
-        });
-
-        if (pathStack.length) {
-            // add the last point (current position)
-            pathStack[pathStack.length - 1].end = {...lastStepPosition};
-
-            pathStack.forEach(path => {
-                this.context.save();
-                this.context.beginPath();
-
-                const gradient = this.context.createLinearGradient(
-                    path.start.x,
-                    path.start.y,
-                    path.end.x,
-                    path.end.y,
-                );
-                // #F5C941
-                gradient.addColorStop(0, `rgba(${this.color.r},${this.color.g},${this.color.b},0)`);
-                gradient.addColorStop(1, `rgba(${this.color.r},${this.color.g},${this.color.b},1)`);
-
-
-                this.context.strokeStyle = gradient;
-                this.context.lineWidth = 3;
-
-                this.context.moveTo(path.start.x, path.start.y);
-                this.context.lineTo(path.end.x, path.end.y);
-                this.context.stroke();
-
-                this.context.closePath();
-                this.context.restore();
-            });
-        }
     }
 
     draw(progress) {
@@ -178,7 +118,7 @@ export class Signal {
         }
 
 
-        this.drawShadow(progress);
+        this.history.draw(this.context);
 
 
         this.context.save();
