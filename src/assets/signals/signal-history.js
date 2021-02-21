@@ -1,3 +1,11 @@
+import {calculateDeltaX, calculateDeltaY} from "./signal";
+
+const DIRECTION_X_RIGHT = 'x';
+const DIRECTION_X_LEFT = '-x';
+const DIRECTION_Y_TOP = '-y';
+const DIRECTION_Y_BOTTOM = 'y';
+
+
 export class SignalHistory {
 
     constructor({color, maxlength}) {
@@ -6,30 +14,25 @@ export class SignalHistory {
         this.maxLength = maxlength;
     }
 
-    push(newPoint) {
+    updatePathSize(path) {
+        const xDelta = Math.abs(path.start.x - path.end.x);
+        const yDelta = Math.abs(path.start.y - path.end.y);
+
+        path.size = Math.sqrt(Math.pow(xDelta, 2) + Math.pow(yDelta, 2));
+    }
+
+    push(newPoint, isNewPath = false) {
         if (this.historyStack.length) {
             const lastPath = this.historyStack[this.historyStack.length - 1];
+            lastPath.end = newPoint;
 
-            if (lastPath.end) {
-
-                if (
-                    (lastPath.start.x === lastPath.end.x) && (lastPath.end.x === newPoint.x) ||
-                    (lastPath.start.y === lastPath.end.y) && (lastPath.end.y === newPoint.y)
-                ) {
-                    // the same path
-                    // need to update end point
-                    lastPath.end = newPoint;
-                } else {
-                    // has new direction
-                    // need to add new path
-                    this.historyStack.push({
-                        start: newPoint,
-                        end: null,
-                    });
-                }
-
+            if (isNewPath) {
+                this.historyStack.push({
+                    start: newPoint,
+                    end: null,
+                });
             } else {
-                lastPath.end = newPoint;
+                this.updatePathSize(lastPath);
             }
 
         } else {
@@ -46,11 +49,7 @@ export class SignalHistory {
         const totalLength = this
             .historyStack
             .filter(path => path.end)
-            .reduce((accumulator, currentPath) => {
-                const pathAxis = (currentPath.start.x === currentPath.end.x) ? 'y' : 'x';
-                const pathLength = Math.abs(currentPath.start[pathAxis] - currentPath.end[pathAxis]);
-                return accumulator + pathLength;
-            }, 0);
+            .reduce((accumulator, currentPath) => accumulator + currentPath.size, 0);
 
 
         if (totalLength > this.maxLength) {
@@ -60,20 +59,25 @@ export class SignalHistory {
             historyStackCopy
                 .filter(path => path.end)
                 .forEach(path => {
-                    const pathAxis = (path.start.x === path.end.x) ? 'y' : 'x';
-                    const pathLength = Math.abs(path.start[pathAxis] - path.end[pathAxis]);
+                    if (unnecessaryLength <= 0) {
+                        return;
+                    }
 
-                    if (pathLength < unnecessaryLength) {
-                        // remove full path
+                    if (path.size <= unnecessaryLength) {
+                        // remove the full path
+
                         path.remove = true;
+                        unnecessaryLength -= path.size;
                     } else {
                         // remove part of the path
                         // change `start` point
-                        
 
+                        path.start.x += calculateDeltaX(unnecessaryLength) * ((path.start.x > path.end.x) ? -1 : 1);
+                        path.start.y += calculateDeltaY(unnecessaryLength) * ((path.start.y > path.end.y) ? -1 : 1);
+
+                        this.updatePathSize(path);
+                        unnecessaryLength = 0;
                     }
-
-                    unnecessaryLength -= pathLength;
                 });
         }
 
@@ -87,10 +91,22 @@ export class SignalHistory {
     }
 
     draw(context) {
+        const historySizeTotal = this
+            .historyStack
+            .filter(path => path.end)
+            .reduce((accumulator, currentPath) => accumulator + currentPath.size, 0);
+
+
         this
             .historyStack
             .filter(path => path.end)
-            .forEach(path => {
+            .forEach((path, pathIndex, pathList) => {
+                const historySizeBehind = pathList
+                    .filter((currentPath, currentPathIndex) => {
+                        return currentPathIndex < pathIndex
+                    })
+                    .reduce((accumulator, currentPath) => accumulator + currentPath.size, 0);
+
                 context.save();
                 context.beginPath();
 
@@ -101,11 +117,11 @@ export class SignalHistory {
                     path.end.y,
                 );
 
-                gradient.addColorStop(0, `rgba(${this.color.r},${this.color.g},${this.color.b},0)`);
-                gradient.addColorStop(1, `rgba(${this.color.r},${this.color.g},${this.color.b},1)`);
+                gradient.addColorStop(0, `rgba(${this.color.r},${this.color.g},${this.color.b}, ${historySizeBehind / historySizeTotal})`);
+                gradient.addColorStop(1, `rgba(${this.color.r},${this.color.g},${this.color.b}, ${(historySizeBehind + path.size) / historySizeTotal})`);
 
                 context.strokeStyle = gradient;
-                context.lineWidth = 3;
+                context.lineWidth = 1;
 
                 context.moveTo(path.start.x, path.start.y);
                 context.lineTo(path.end.x, path.end.y);
@@ -114,9 +130,5 @@ export class SignalHistory {
                 context.closePath();
                 context.restore();
             });
-    }
-
-    reduceHistoryLength() {
-
     }
 }

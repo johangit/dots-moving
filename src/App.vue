@@ -30,7 +30,7 @@
 
 <script>
 import CanvasBox from "./components/CanvasBox.vue";
-import {STATUS_PAUSE, STATUS_PLAY} from "./assets/signals/box";
+import {STATUS_PAUSE, STATUS_PLAY} from "./assets/box";
 
 export default {
     name: 'App',

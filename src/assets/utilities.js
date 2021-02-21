@@ -7,7 +7,6 @@ export function radToDeg(radians) {
 }
 
 export function lightenDarkenColor(col, amt) {
-
     var usePound = false;
 
     if (col[0] == "#") {
@@ -33,4 +32,8 @@ export function lightenDarkenColor(col, amt) {
     else if (g < 0) g = 0;
 
     return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+}
+
+export function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
 }

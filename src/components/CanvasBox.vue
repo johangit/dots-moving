@@ -23,7 +23,7 @@
 
 <script>
 import {degToRad} from "../assets/utilities";
-import {Box, STATUS_PAUSE, STATUS_PLAY} from "../assets/signals/box";
+import {Box, STATUS_PAUSE, STATUS_PLAY} from "../assets/box";
 
 export default {
     name: "CanvasBox",
@@ -61,7 +61,7 @@ export default {
                     width: canvasWidth,
                     height: canvasHeight,
                     devicePixelRatio: dpr,
-                    signalsQty: 1
+                    signalsQty: 10
                 });
 
                 this.signalsBox.init();

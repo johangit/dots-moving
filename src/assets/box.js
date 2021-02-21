@@ -1,6 +1,7 @@
-import {degToRad} from "../utilities";
-import {Signal} from "./signal";
-import {applyCanvasHelper} from "../canvas-helper";
+import {getRandomArbitrary} from "./utilities";
+import {Signal, SIGNAL_OUT_MARGIN} from "./signals/signal";
+import {applyCanvasHelper} from "./canvas-helper";
+import {DIRECTION_LEFT, DIRECTION_RIGHT} from "./signals/directions";
 
 export const STATUS_PLAY = 'play';
 export const STATUS_PAUSE = 'pause';
@@ -39,23 +40,45 @@ export class Box {
         };
     }
 
+    getNewSignal(inside = true) {
+        let positionX = 0;
+        let positionY = 0;
+        let majorDirection = null;
+
+        if (inside) {
+            positionY = getRandomArbitrary(0, this.height);
+            positionX = getRandomArbitrary(0, this.width);
+        } else {
+            positionY = getRandomArbitrary(0, this.height);
+            if (Math.random() > .5) {
+                positionX = this.width + SIGNAL_OUT_MARGIN;
+                majorDirection = DIRECTION_LEFT;
+            } else {
+                positionX = -1;
+                majorDirection = DIRECTION_RIGHT;
+            }
+        }
+
+        return new Signal({
+            context: this.context,
+            positionX,
+            positionY,
+            speed: 5,
+            size: 3,
+            color: {
+                r: 245,
+                g: 201,
+                b: 65,
+            },
+            historyMaxLength: 300,
+            majorDirection,
+        });
+    }
+
     init() {
         let i = this.signalsQty;
         while (i) {
-            this.signals.push(new Signal({
-                context: this.context,
-                positionX: this.width / 2,
-                positionY: this.height / 2,
-                speed: 5,
-                size: 5,
-                color: {
-                    r: 245,
-                    g: 201,
-                    b: 65,
-                },
-                historyMaxLength: 200,
-            }));
-
+            this.signals.push(this.getNewSignal());
             i--;
         }
 
@@ -69,14 +92,20 @@ export class Box {
         const drawObjects = () => {
             let progress = Math.round(performance.now() - startedAt);
 
-            this.drawFPS();
-
-            // // 20 sec
-            // if (progress > 20 * 1000) {
-            //     return;
-            // }
+            // debug
+            if (window.hasOwnProperty('stop-animation')) {
+                return;
+            }
 
             this.context.clear();
+
+            this.signals.forEach((signal, index) => {
+                if (signal.isOutOfBox(0, 0, this.width, this.height)) {
+                    this.signals.splice(index, 1);
+                    this.signals.push(this.getNewSignal(false));
+                }
+            });
+
             this.signals.forEach(signal => signal.draw(progress));
 
             if (this.showFps) {
