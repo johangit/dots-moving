@@ -18,7 +18,7 @@
                             <a class="navbar-item"
                                v-if="canvasPlay"
                                v-on:click.prevent="canvasPlay = false">
-                                Pause
+                                Stop
                             </a>
                         </div>
                     </div>
@@ -30,7 +30,7 @@
 
 <script>
 import CanvasBox from "./components/CanvasBox.vue";
-import {STATUS_PAUSE, STATUS_PLAY} from "./assets/box";
+import {STATUS_STOP, STATUS_PLAY} from "./assets/box";
 
 export default {
     name: 'App',
@@ -38,12 +38,12 @@ export default {
         CanvasBox,
     },
     data: () => ({
-        canvasPlay: false,
+        canvasPlay: true,
     }),
     computed: {
         canvasBoxStatus() {
-            return this.canvasPlay ? STATUS_PLAY : STATUS_PAUSE;
-        }
+            return this.canvasPlay ? STATUS_PLAY : STATUS_STOP;
+        },
     },
     mounted() {
     },

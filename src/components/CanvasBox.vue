@@ -22,15 +22,14 @@
 
 
 <script>
-import {degToRad} from "../assets/utilities";
-import {Box, STATUS_PAUSE, STATUS_PLAY} from "../assets/box";
+import {Box, STATUS_STOP, STATUS_PLAY} from "../assets/box";
 
 export default {
     name: "CanvasBox",
     props: {
         status: {
             type: String,
-            default: STATUS_PAUSE,
+            default: STATUS_STOP,
         }
     },
     data: () => ({
@@ -38,12 +37,12 @@ export default {
     }),
     watch: {
         status(newStatus) {
-            if (newStatus === STATUS_PAUSE) {
-                this.signalsBox.pause();
+            if (newStatus === STATUS_STOP) {
+                this.signalsBox.stop();
             }
 
             if (newStatus === STATUS_PLAY) {
-                this.signalsBox.play();
+                this.init();
             }
         }
     },
@@ -65,6 +64,10 @@ export default {
                 });
 
                 this.signalsBox.init();
+
+                if (this.status === STATUS_PLAY) {
+                    this.signalsBox.play();
+                }
             });
         },
     },

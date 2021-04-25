@@ -94,12 +94,14 @@ export class SignalHistory {
         const historySizeTotal = this
             .historyStack
             .filter(path => path.end)
+            .filter(path => path.hasOwnProperty('size'))
             .reduce((accumulator, currentPath) => accumulator + currentPath.size, 0);
 
 
         this
             .historyStack
             .filter(path => path.end)
+            .filter(path => path.hasOwnProperty('size'))
             .forEach((path, pathIndex, pathList) => {
                 const historySizeBehind = pathList
                     .filter((currentPath, currentPathIndex) => {
@@ -117,8 +119,8 @@ export class SignalHistory {
                     path.end.y,
                 );
 
-                gradient.addColorStop(0, `rgba(${this.color.r},${this.color.g},${this.color.b}, ${historySizeBehind / historySizeTotal})`);
-                gradient.addColorStop(1, `rgba(${this.color.r},${this.color.g},${this.color.b}, ${(historySizeBehind + path.size) / historySizeTotal})`);
+                gradient.addColorStop(0, `rgba(${this.color.r},${this.color.g},${this.color.b}, ${historySizeTotal ? (historySizeBehind / historySizeTotal) : 0})`);
+                gradient.addColorStop(1, `rgba(${this.color.r},${this.color.g},${this.color.b}, ${historySizeTotal ? ((historySizeBehind + path.size) / historySizeTotal) : 0})`);
 
                 context.strokeStyle = gradient;
                 context.lineWidth = 1;

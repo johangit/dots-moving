@@ -4,7 +4,7 @@ import {applyCanvasHelper} from "./canvas-helper";
 import {DIRECTION_LEFT, DIRECTION_RIGHT} from "./signals/directions";
 
 export const STATUS_PLAY = 'play';
-export const STATUS_PAUSE = 'pause';
+export const STATUS_STOP = 'stop';
 
 export class Box {
     constructor({node, width, height, devicePixelRatio, signalsQty}) {
@@ -13,7 +13,7 @@ export class Box {
         this.signalsQty = signalsQty;
         this.signals = [];
 
-        this.status = STATUS_PAUSE;
+        this.status = STATUS_STOP;
 
         this.node = node;
         this.node.width = width * devicePixelRatio;
@@ -148,8 +148,8 @@ export class Box {
         this.context.fillText(`FPS: ${Math.round(this.fps.value)}`, 20, 30);
     }
 
-    pause() {
-        this.status = STATUS_PAUSE;
+    stop() {
+        this.status = STATUS_STOP;
     }
 
     play() {
