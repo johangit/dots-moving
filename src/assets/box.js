@@ -2,16 +2,20 @@ import {getRandomArbitrary} from "./utilities";
 import {Signal, SIGNAL_OUT_MARGIN} from "./signals/signal";
 import {applyCanvasHelper} from "./canvas-helper";
 import {DIRECTION_LEFT, DIRECTION_RIGHT} from "./signals/directions";
+import {VignetteEffect} from "./effects/vignetteEffect";
 
 export const STATUS_PLAY = 'play';
 export const STATUS_STOP = 'stop';
 
 export class Box {
+    _backgroundColor = '#2F2F2F';
+
     constructor({node, width, height, devicePixelRatio, signalsQty}) {
         this.width = width;
         this.height = height;
         this.signalsQty = signalsQty;
         this.signals = [];
+        this.effects = [];
 
         this.status = STATUS_STOP;
 
@@ -76,6 +80,12 @@ export class Box {
     }
 
     init() {
+        this.effects.push(new VignetteEffect({
+            context: this.context,
+            width: this.width,
+            height: this.height,
+        }));
+
         let i = this.signalsQty;
         while (i) {
             this.signals.push(this.getNewSignal());
@@ -107,6 +117,8 @@ export class Box {
             });
 
             this.signals.forEach(signal => signal.draw(progress));
+
+            this.effects.forEach(effect => effect.draw());
 
             if (this.showFps) {
                 this.drawFPS();

@@ -7,7 +7,7 @@ export function applyCanvasHelper({context, devicePixelRatio, width, height}) {
 
     context.clear = () => {
         context.resetTranslate(0, 0);
-        context.fillStyle = "#333";
+        context.fillStyle = "#24261f";
         context.fillRect(0, 0, width, height);
     }
 
